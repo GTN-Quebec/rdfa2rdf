@@ -14,7 +14,7 @@ and produces RDF triples in :
  - RDF/XML
  - Json
 
-Launch program
---------------
+Launching program
+-----------------
 1. Build it with maven 
-2. Double-click on rdfa2rdf.jar (on target folder)
+2. Double-click on `rdfa2rdf-VER-jar-with-dependencies.jar` (on target folder)
