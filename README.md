@@ -1,7 +1,7 @@
 rdfa2rdf
 ========
 
-Standalone application for RDF triple generation from RDFa format.
+Standalone application for RDF triple generation from (X)HTML+RDFa format.
 
 This program distill (X)HTML+RDFa from :
  - URL
