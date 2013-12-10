@@ -1,5 +1,6 @@
 package ca.licef.rdfa2rdf;
 
+import licef.IOUtil;
 import licef.StreamUtil;
 import licef.tsapi.Constants;
 import licef.tsapi.util.Translator;
@@ -10,10 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 
 /**
@@ -28,18 +26,20 @@ public class Application extends JFrame {
     private final JTextArea taText;
     private final JTextArea taResult;
 
-    int leftMargin = 60;
+    int leftMargin = 50;
     int space = 15;
     private final ButtonGroup formatGroup;
     private final JButton convertButton;
     private final JButton saveButton;
 
     int outputFormat = Constants.TURTLE;
-    private JFileChooser fileChooser;
+    String outputName = "Turtle";
+    String outputExtension = "ttl";
+    private File currentDirectory;
 
     public Application() {
         setTitle("RDFa to RDF");
-        setSize(900, 624);
+        setSize(900, 620);
         setLayout(new BorderLayout());
 
         JSplitPane mainPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -56,11 +56,16 @@ public class Application extends JFrame {
         JPanel leftPanel = new JPanel(new CardLayout(space, space));
 
         JPanel inputPanelWrapper = new JPanel(new BorderLayout());
-
         inputPanelWrapper.setPreferredSize(new Dimension(400, 10));
 
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+
+        JLabel rdfaTitle = new JLabel("(X)HTML + RDFa", JLabel.CENTER);
+        rdfaTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        inputPanel.add(rdfaTitle);
+
+        inputPanel.add(Box.createVerticalStrut(11));
 
         //URL
         JPanel urlPanel = new JPanel();
@@ -178,24 +183,32 @@ public class Application extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.TURTLE;
+                outputName = "Turtle";
+                outputExtension = "ttl";
             }
         });
         n3.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.N_TRIPLE;
+                outputName = "N-Triples";
+                outputExtension = "nt";
             }
         });
         rdfxml.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.RDFXML;
+                outputName = "RDF/XML";
+                outputExtension = "rdf";
             }
         });
         json.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.JSON;
+                outputName = "JSON";
+                outputExtension = "json";
             }
         });
 
@@ -223,7 +236,13 @@ public class Application extends JFrame {
 
         JPanel rightPanel = new JPanel(new CardLayout(space, space));
 
-        JPanel outputPanel = new JPanel(new BorderLayout(0, 5));
+        JPanel outputPanel = new JPanel(new BorderLayout(0, 10));
+
+        JLabel rdfTitle = new JLabel("RDF", JLabel.CENTER);
+        rdfTitle.setVerticalAlignment(JLabel.TOP);
+        rdfTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        rdfTitle.setPreferredSize(new Dimension(5, 25));
+        outputPanel.add(rdfTitle, BorderLayout.NORTH);
 
         //Result
         JScrollPane scrollPaneResult = new JScrollPane();
@@ -252,12 +271,14 @@ public class Application extends JFrame {
     }
 
     private void selectFile() {
-        if (fileChooser == null)
-            fileChooser = new JFileChooser();
+        JFileChooser fileChooser = new JFileChooser();
+        if (currentDirectory != null)
+            fileChooser.setCurrentDirectory(currentDirectory);
         fileChooser.showOpenDialog(this);
         File f = fileChooser.getSelectedFile();
         if (f != null) {
             tfFile.setText(f.toString());
+            currentDirectory = fileChooser.getCurrentDirectory();
             fileChanged();
         }
     }
@@ -300,20 +321,40 @@ public class Application extends JFrame {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Class.forName("net.rootdev.javardfa.jena.RDFaReader");
             Translator.convert(is, baseUri, Constants.HTML, outputFormat, os);
-            taResult.setText(os.toString());
+            String content = os.toString();
+            taResult.setText(content);
             taResult.setCaretPosition(0);
+            saveButton.setEnabled(!"".equals(content));
         } catch (Exception e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, e.toString());
         }
 
     }
 
     private void save() {
+        try {
+            File f = null;
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setCurrentDirectory(currentDirectory);
+            fileChooser.addChoosableFileFilter(new FormatFileFilter(outputName, outputExtension));
+            int rVal;
+            fileChooser.setSelectedFile(new File("output." + outputExtension));
+            rVal = fileChooser.showSaveDialog(this);
 
+            if (rVal == JFileChooser.APPROVE_OPTION) {
+                f = new File(fileChooser.getCurrentDirectory() + File.separator +
+                        fileChooser.getSelectedFile().getName());
+            }
+            if (f != null) {
+                currentDirectory = fileChooser.getCurrentDirectory();
+                IOUtil.writeStringToFile(taResult.getText(), f);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, e.toString());
+        }
     }
 
     public static void main(String[] args) {
-        Application appl = new Application();
-        appl.setVisible(true);
+        (new Application()).setVisible(true);
     }
 }
