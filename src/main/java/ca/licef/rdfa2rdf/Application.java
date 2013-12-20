@@ -113,7 +113,6 @@ public class Application extends JFrame {
         filePanel.add(fileSelector);
         inputPanel.add(filePanel);
         fileSelector.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 selectFile();
             }
@@ -180,7 +179,6 @@ public class Application extends JFrame {
         formatPanel.add(formats);
         inputPanel.add(formatPanel);
         turtle.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.TURTLE;
                 outputName = "Turtle";
@@ -188,7 +186,6 @@ public class Application extends JFrame {
             }
         });
         n3.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.N_TRIPLE;
                 outputName = "N-Triples";
@@ -196,7 +193,6 @@ public class Application extends JFrame {
             }
         });
         rdfxml.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.RDFXML;
                 outputName = "RDF/XML";
@@ -204,7 +200,6 @@ public class Application extends JFrame {
             }
         });
         json.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 outputFormat = Constants.JSON;
                 outputName = "JSON";
@@ -220,7 +215,6 @@ public class Application extends JFrame {
         convertButton.setEnabled(false);
         inputPanelWrapper.add(convertButton, BorderLayout.SOUTH);
         convertButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 convert();
             }
@@ -260,7 +254,6 @@ public class Application extends JFrame {
         saveButton.setEnabled(false);
         outputPanel.add(saveButton, BorderLayout.SOUTH);
         saveButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 save();
             }
@@ -320,7 +313,7 @@ public class Application extends JFrame {
                 is = StreamUtil.getStream(taText.getText());
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Class.forName("net.rootdev.javardfa.jena.RDFaReader");
-            Translator.convert(is, baseUri, Constants.HTML, outputFormat, os);
+            Translator.convert(is, baseUri, Constants.XHTML, outputFormat, os);
             String content = os.toString();
             taResult.setText(content);
             taResult.setCaretPosition(0);
