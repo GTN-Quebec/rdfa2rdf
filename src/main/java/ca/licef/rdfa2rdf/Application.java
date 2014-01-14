@@ -7,10 +7,7 @@ import licef.tsapi.util.Translator;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 
@@ -26,11 +23,13 @@ public class Application extends JFrame {
     private final JTextArea taText;
     private final JTextArea taResult;
 
-    int leftMargin = 50;
+    int leftMargin = 60;
     int space = 15;
     private final ButtonGroup formatGroup;
     private final JButton convertButton;
     private final JButton saveButton;
+
+    int inputFormat = Constants.XHTML;
 
     int outputFormat = Constants.TURTLE;
     String outputName = "Turtle";
@@ -39,7 +38,7 @@ public class Application extends JFrame {
 
     public Application() {
         setTitle("RDFa to RDF");
-        setSize(900, 620);
+        setSize(900, 680);
         setLayout(new BorderLayout());
 
         JSplitPane mainPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -154,12 +153,38 @@ public class Application extends JFrame {
 
         inputPanel.add(Box.createVerticalStrut(20));
 
-        //Formats
+        //Input formats
+        JPanel inputFormatPanel = new JPanel();
+        inputFormatPanel.setLayout(new BoxLayout(inputFormatPanel, BoxLayout.X_AXIS));
+        JLabel jLabelInput = new JLabel("Input: ");
+        jLabelInput.setPreferredSize(new Dimension(leftMargin, 10));
+        inputFormatPanel.add(jLabelInput);
+        inputFormatPanel.add(Box.createHorizontalStrut(10));
+        final JComboBox comboInput = new JComboBox();
+        comboInput.addItem("XHTML + RDFa");
+        comboInput.addItem("HTML + RDFa");
+        inputFormatPanel.add(comboInput);
+        inputPanel.add(inputFormatPanel);
+        comboInput.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if (comboInput.getSelectedIndex() == 0)
+                    inputFormat = Constants.XHTML;
+                else
+                    inputFormat = Constants.HTML;
+            }
+        });
+
+        inputPanel.add(Box.createVerticalStrut(20));
+
+        //Output formats
         JPanel formatPanel = new JPanel();
         formatPanel.setLayout(new BoxLayout(formatPanel, BoxLayout.X_AXIS));
-        formatPanel.add(Box.createHorizontalStrut(leftMargin + 8));
+        JLabel jLabelOutput = new JLabel("Output:");
+        jLabelOutput.setPreferredSize(new Dimension(leftMargin, 10));
+        formatPanel.add(jLabelOutput);
+        formatPanel.add(Box.createHorizontalStrut(10));
         JPanel formats = new JPanel();
-        formats.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.lightGray), " Output format "));
+        formats.setBorder(BorderFactory.createLineBorder(Color.lightGray));
         formats.setLayout(new BoxLayout(formats, BoxLayout.Y_AXIS));
         formats.add(Box.createVerticalStrut(1));
         JRadioButton turtle = new JRadioButton("TURTLE");
@@ -296,6 +321,8 @@ public class Application extends JFrame {
 
     private void convert() {
         try {
+            taResult.setText("");
+            taResult.setCaretPosition(0);
             InputStream is;
             String baseUri = "http://localhost";
             String url = tfURL.getText();
@@ -313,7 +340,7 @@ public class Application extends JFrame {
                 is = StreamUtil.getStream(taText.getText());
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             Class.forName("net.rootdev.javardfa.jena.RDFaReader");
-            Translator.convert(is, baseUri, Constants.XHTML, outputFormat, os);
+            Translator.convert(is, baseUri, inputFormat, outputFormat, os);
             String content = os.toString();
             taResult.setText(content);
             taResult.setCaretPosition(0);
